@@ -12,6 +12,9 @@ The application may be executed by running `gradlew bootRun`.
 version, you can modify the `sourceCompatibility` variable in the `build.gradle` file.*
 
 ### How to Use
+At runtime, the OpenAPI Spec and interactive UI are available at:
+[/swagger-ui](http://localhost:8080/swagger-ui)
+
 The following endpoints are available to use:
 ```
 * CREATE
