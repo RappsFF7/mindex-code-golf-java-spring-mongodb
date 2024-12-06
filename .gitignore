@@ -1,0 +1,6 @@
+/bin/
+/.gradle/
+
+# Eclipse and STS
+/build/
+/.settings/
