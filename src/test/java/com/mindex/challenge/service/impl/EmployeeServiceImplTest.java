@@ -1,6 +1,7 @@
 package com.mindex.challenge.service.impl;
 
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,14 +17,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class EmployeeServiceImplTest {
+	
+	public static final String BASE_URL = "http://localhost";
 
     private String employeeUrl;
     private String employeeIdUrl;
+    private String reportingStructureUrl;
 
     @Autowired
     private EmployeeService employeeService;
@@ -36,8 +41,9 @@ public class EmployeeServiceImplTest {
 
     @Before
     public void setup() {
-        employeeUrl = "http://localhost:" + port + "/employee";
-        employeeIdUrl = "http://localhost:" + port + "/employee/{id}";
+        employeeUrl = BASE_URL + ":" + port + "/employee";
+        employeeIdUrl = BASE_URL + ":" + port + "/employee/{id}";
+        reportingStructureUrl = BASE_URL + ":" + port + "/employee/{id}/reportingStructure";
     }
 
     @Test
@@ -82,5 +88,26 @@ public class EmployeeServiceImplTest {
         assertEquals(expected.getLastName(), actual.getLastName());
         assertEquals(expected.getDepartment(), actual.getDepartment());
         assertEquals(expected.getPosition(), actual.getPosition());
+    }
+    
+    @Test
+    public void testReportingStructure() {
+        // Read reporting structure
+    	//   Employee 1
+    	{
+        	String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+        	int expectedNumberOfReports = 4;
+        	
+        	ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, employeeId).getBody();
+            assertEquals(expectedNumberOfReports, reportingStructure.getNumberOfReports());
+    	}
+    	//   Employee 2
+    	{
+        	String employeeId = "03aa1462-ffa9-4978-901b-7c001562cf6f";
+        	int expectedNumberOfReports = 2;
+        	
+        	ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, employeeId).getBody();
+            assertEquals(expectedNumberOfReports, reportingStructure.getNumberOfReports());
+    	}
     }
 }

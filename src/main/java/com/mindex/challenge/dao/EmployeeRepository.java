@@ -1,10 +1,104 @@
 package com.mindex.challenge.dao;
 
 import com.mindex.challenge.data.Employee;
+import com.mindex.challenge.data.ReportingStructure;
+
 import org.springframework.stereotype.Repository;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 @Repository
 public interface EmployeeRepository extends MongoRepository<Employee, String> {
     Employee findByEmployeeId(String employeeId);
+
+    /*
+db.employee.aggregation([
+    { $match: { employeeId: '16a596ae-edd3-4847-99fe-c4518e82c86f' } },
+    {
+        $graphLookup: {
+            from: "employee",
+            startWith: "$directReports",
+            connectFromField: "directReports",
+            connectToField: "employeeId",
+            as: "directReportTree"
+        }
+    },
+    {
+        $project: {
+    		employee: "$$ROOT",
+    		numberOfReports: {
+    			$size: "$directReportTree"
+    		}
+        }
+    }
+])
+     */
+    @Aggregation({
+"""
+{ $match: { employeeId: '?0' } }
+""","""
+{
+    $graphLookup: {
+        from: "employee",
+        startWith: "$directReports",
+        connectFromField: "directReports",
+        connectToField: "employeeId",
+        as: "directReportTree"
+    }
+}
+""","""
+{
+    $project: {
+		employee: "$$ROOT",
+		numberOfReports: {
+			$size: "$directReportTree"
+		}
+    }
+}
+"""
+    })
+    ReportingStructure getReportingStructureByEmployeeId(String employeeId);
+    
+    /** @deprecated Employee structure has changed */
+    /*
+db.employee.aggregation([
+    {
+        $graphLookup: {
+            from: "employee",
+            startWith: "$directReports.employeeId",
+            connectFromField: "directReports.employeeId",
+            connectToField: "employeeId",
+            as: "directReportTree"
+        }
+    }, {
+        $project: {
+    		numberOfReports: {
+    			$size: "$directReportTree"
+    		}
+        }
+    }
+])
+     */
+    @Aggregation({
+"""
+{
+    $graphLookup: {
+        from: "employee",
+        startWith: "$directReports.employeeId",
+        connectFromField: "directReports.employeeId",
+        connectToField: "employeeId",
+        as: "directReportTree"
+    }
+}
+""","""
+{
+    $project: {
+		numberOfReports: {
+			$size: "$directReportTree"
+		}
+    }
+}
+"""
+    })
+    ReportingStructure getReportingStructureByEmployeeId_OrigData(String employeeId);
 }
