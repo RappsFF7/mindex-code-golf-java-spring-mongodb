@@ -108,3 +108,25 @@ persist and fetch `Compensation` data for a specific `Employee` using the persis
 
 ## Delivery
 Please upload your results to a publicly accessible Git repo. Free ones are provided by GitHub and Bitbucket.
+
+## Execution
+
+### Preemptive changes
+I prefer to use the Eclipse IDE (or IntelliJ) for Java, so I imported the project into Eclipse and added the recommended settings files to git (.classpath, .project, and updated .gitignore for Eclipse temp files). This won't prevent other developers from continuing to use their choice of IDE (like Visual Studio Code).
+
+Next, the project is exclusively hosting web service endpoints with no interactive UI or hosting a specification document for consumers. A browser can be used to manually test GET requests, but building fetch requests for all other HTTP methods in a browser or requiring developers to download an external application is less ideal. I added a library that automatically generates a swagger-ui spec and interactive web UI endpoint. Developers are still free to use their own tools (like Postman), but this gives a simple and low maintenance built-in method for manual testing and consumption of the service.
+
+### Task 1
+Hierarchical structures can be tricky to calculate and expensive as they grow, so I prefer to have the database link the data rather than link the data in Java or execute multiple round trip DB calls. The data wasn't in an ideal format for $graphLookup (or maybe I misunderstood part of the syntax), so I decided to update the persistent data by converting the, "directReports" array of objects to an array of strings, as it only stores a single value (employeeId) anyway. With the data changed, I created a custom aggregate query to collect and summarize the data as needed.
+
+It's also worth pointing out that this optimization could be seen as unnecessary for the given data set, as even a large company with thousands of employees is still a relatively small amount of data to join without $graphLookup.
+
+### Unexpected interruption
+As I started task 2 I ran into a bug that prevented me from moving forward. The update endpoint /employee/{id} [put] does execute without errors, but it doesn't actually update the record as expected. It instead creates a new record. This is not discovered by the unit test because no error is thrown (.save() is allowed to insert if needed) and no further queries are executed that would cause the issue (like /employee/{id} [get] request for that employee after the update). Furthermore, the database doesn't configure any data constraints (like assigning the _id or employeeId field as a unique index).
+
+To fix the issue, the Employee, "_id" property needed to exist on the Java object in order for Mongo to find the record to update. I added an, "Id" property to Employee (to match the Java naming convention instead of the exact Mongo, "_id" name) and used an annotation, "@Id" to make sure it mapped properly (though the Mongo documentation states it looks for, "Id" or "_id", so the annotation likely isn't needed. I just prefer to explicitly decorate so the Javadocs make it clear why it exists).
+
+The bug is now fixed, but I also updated the EmployeeService test with a situation that would trigger this bug in case there is a regression in the code at a later date.
+
+### Task 2
+Compensation is tied directly to an employee in the same way ReportingStructure is (neither can exist without employee, and they relate in a 1-to-1 or 1-to-many relationship), so I decided to include the compensation data inside the Employee collection. This means the existing employee endpoints can both read and update this data without any additional endpoints. However, I provided endpoints to update exclusively the compensation document as per the requirement (as it still may be useful, for instance if certain clients will have limited access, like a finance team, and they are only able to update compensation but not documents like the employee reporting structure).
