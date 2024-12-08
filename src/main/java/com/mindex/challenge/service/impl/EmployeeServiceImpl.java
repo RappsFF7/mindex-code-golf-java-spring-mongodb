@@ -1,7 +1,5 @@
 package com.mindex.challenge.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindex.challenge.dao.EmployeeRepository;
 import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
@@ -13,92 +11,85 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EmployeeServiceImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(EmployeeServiceImpl.class);
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+	@Autowired
+	private EmployeeRepository employeeRepository;
 
-    @Override
-    public Employee create(Employee employee) {
-        LOG.debug("Creating employee [{}]", employee);
+	@Override
+	public Employee create(Employee employee) {
+		LOG.debug("Creating employee [{}]", employee);
 
-        employee.setEmployeeId(UUID.randomUUID().toString());
-        employeeRepository.insert(employee);
+		employee.setEmployeeId(UUID.randomUUID().toString());
+		employeeRepository.insert(employee);
 
-        return employee;
-    }
+		return employee;
+	}
 
-    @Override
-    public Employee read(String id) {
-        LOG.debug("Reading employee with id [{}]", id);
+	@Override
+	public Employee read(String id) {
+		LOG.debug("Reading employee with id [{}]", id);
 
-        Employee employee = employeeRepository.findByEmployeeId(id);
+		Employee employee = employeeRepository.findByEmployeeId(id);
 
-        if (employee == null) {
-            throw new InvalidEmployeeIdException(id);
-        }
+		if (employee == null) {
+			throw new InvalidEmployeeIdException(id);
+		}
 
-        return employee;
-    }
+		return employee;
+	}
 
-    @Override
-    public Employee update(Employee employee) {
-        LOG.debug("Updating employee [{}]", employee);
+	@Override
+	public Employee update(Employee employee) {
+		LOG.debug("Updating employee [{}]", employee);
 
-        return employeeRepository.save(employee);
-    }
+		return employeeRepository.save(employee);
+	}
 
 	@Override
 	public ReportingStructure reportingStructure(String employeeId) {
-        LOG.debug("Generating employeeStructure for employee id [{}]", employeeId);
-        
-        ReportingStructure reportingStructure = employeeRepository.getReportingStructureByEmployeeId(employeeId);
+		LOG.debug("Generating employeeStructure for employee id [{}]", employeeId);
 
-        if (reportingStructure == null) {
-            throw new InvalidEmployeeIdException(employeeId);
-        }
-        
+		ReportingStructure reportingStructure = employeeRepository.getReportingStructureByEmployeeId(employeeId);
+
+		if (reportingStructure == null) {
+			throw new InvalidEmployeeIdException(employeeId);
+		}
+
 		return reportingStructure;
 	}
 
 	@Override
 	public Compensation compensation(String employeeId) {
-        LOG.debug("Reading compensation for employee id [{}]", employeeId);
-		
-        Employee employee = employeeRepository.findByEmployeeId(employeeId);
+		LOG.debug("Reading compensation for employee id [{}]", employeeId);
 
-        if (employee == null) {
-            throw new InvalidEmployeeIdException(employeeId);
-        }
-        
+		Employee employee = employeeRepository.findByEmployeeId(employeeId);
+
+		if (employee == null) {
+			throw new InvalidEmployeeIdException(employeeId);
+		}
+
 		return employee.getCompensation();
 	}
 
 	@Override
 	public Compensation compensationUpdate(String employeeId, Compensation compensation) {
-        LOG.debug("Updating compensation for employee id [{}]", employeeId);
-		
-        Employee employee = employeeRepository.findByEmployeeId(employeeId);
-        try {
-			LOG.debug("Found employee: " + (new ObjectMapper()).writeValueAsString(employee));
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		LOG.debug("Updating compensation for employee id [{}]", employeeId);
+
+		Employee employee = employeeRepository.findByEmployeeId(employeeId);
+
+		if (employee == null) {
+			throw new InvalidEmployeeIdException(employeeId);
 		}
 
-        if (employee == null) {
-            throw new InvalidEmployeeIdException(employeeId);
-        }
-        
-        employee.setCompensation(compensation);
-        Employee updatedEmployee = employeeRepository.save(employee);
-        
+		employee.setCompensation(compensation);
+		Employee updatedEmployee = employeeRepository.save(employee);
+
 		return updatedEmployee.getCompensation();
 	}
 }
