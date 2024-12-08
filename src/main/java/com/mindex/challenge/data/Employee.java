@@ -13,8 +13,9 @@ public class Employee {
     private String position;
     private String department;
     private List<String> directReports;
+    private Compensation compensation;
 
-    public Employee() {
+	public Employee() {
     }
 
 	public String getId() {
@@ -72,4 +73,12 @@ public class Employee {
     public void setDirectReports(List<String> directReports) {
         this.directReports = directReports;
     }
+
+    public Compensation getCompensation() {
+		return compensation;
+	}
+
+	public void setCompensation(Compensation compensation) {
+		this.compensation = compensation;
+	}
 }

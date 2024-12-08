@@ -1,16 +1,19 @@
 package com.mindex.challenge.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mindex.challenge.dao.EmployeeRepository;
+import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
+import com.mindex.challenge.exception.InvalidEmployeeIdException;
 import com.mindex.challenge.service.EmployeeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -38,7 +41,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findByEmployeeId(id);
 
         if (employee == null) {
-            throw new RuntimeException("Invalid employeeId: " + id);
+            throw new InvalidEmployeeIdException(id);
         }
 
         return employee;
@@ -56,7 +59,46 @@ public class EmployeeServiceImpl implements EmployeeService {
         LOG.debug("Generating employeeStructure for employee id [{}]", employeeId);
         
         ReportingStructure reportingStructure = employeeRepository.getReportingStructureByEmployeeId(employeeId);
+
+        if (reportingStructure == null) {
+            throw new InvalidEmployeeIdException(employeeId);
+        }
         
 		return reportingStructure;
+	}
+
+	@Override
+	public Compensation compensation(String employeeId) {
+        LOG.debug("Reading compensation for employee id [{}]", employeeId);
+		
+        Employee employee = employeeRepository.findByEmployeeId(employeeId);
+
+        if (employee == null) {
+            throw new InvalidEmployeeIdException(employeeId);
+        }
+        
+		return employee.getCompensation();
+	}
+
+	@Override
+	public Compensation compensationUpdate(String employeeId, Compensation compensation) {
+        LOG.debug("Updating compensation for employee id [{}]", employeeId);
+		
+        Employee employee = employeeRepository.findByEmployeeId(employeeId);
+        try {
+			LOG.debug("Found employee: " + (new ObjectMapper()).writeValueAsString(employee));
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+        if (employee == null) {
+            throw new InvalidEmployeeIdException(employeeId);
+        }
+        
+        employee.setCompensation(compensation);
+        Employee updatedEmployee = employeeRepository.save(employee);
+        
+		return updatedEmployee.getCompensation();
 	}
 }

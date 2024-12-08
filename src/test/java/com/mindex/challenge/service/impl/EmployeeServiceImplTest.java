@@ -1,8 +1,11 @@
 package com.mindex.challenge.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,8 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+
+import java.util.Calendar;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -29,6 +33,8 @@ public class EmployeeServiceImplTest {
     private String employeeUrl;
     private String employeeIdUrl;
     private String reportingStructureUrl;
+    private String compensationUrl;
+    private String compensationUpdateUrl;
 
     @Autowired
     private EmployeeService employeeService;
@@ -44,6 +50,8 @@ public class EmployeeServiceImplTest {
         employeeUrl = BASE_URL + ":" + port + "/employee";
         employeeIdUrl = BASE_URL + ":" + port + "/employee/{id}";
         reportingStructureUrl = BASE_URL + ":" + port + "/employee/{id}/reportingStructure";
+        compensationUrl = BASE_URL + ":" + port + "/employee/{id}/compensation";
+        compensationUpdateUrl = BASE_URL + ":" + port + "/employee/{id}/compensation";
     }
 
     @Test
@@ -115,6 +123,38 @@ public class EmployeeServiceImplTest {
         	
         	ReportingStructure reportingStructure = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, employeeId).getBody();
             assertEquals(expectedNumberOfReports, reportingStructure.getNumberOfReports());
+    	}
+    }
+    
+    @Test
+    public void testCompensation() {
+        // Read compensation
+    	{
+        	String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+        	int expectedSalary = 120000;
+        	
+        	Compensation compensation = restTemplate.getForEntity(compensationUrl, Compensation.class, employeeId).getBody();
+            assertEquals(expectedSalary, compensation.getSalary());
+    	}
+    }
+    
+    @Test
+    public void testCompensationUpdate() throws Exception {
+        // Read compensation
+    	{
+        	String employeeId = "16a596ae-edd3-4847-99fe-c4518e82c86f";
+        	
+        	Compensation newCompensation = new Compensation();
+        	newCompensation.setSalary(200000);
+        	
+        	Calendar effectiveDate = Calendar.getInstance();
+        	effectiveDate.set(2024, 1, 1);
+        	newCompensation.setEffectiveDate(effectiveDate.getTime());
+        	
+        	Compensation compensation = restTemplate.postForEntity(compensationUpdateUrl, newCompensation, Compensation.class, employeeId).getBody();
+            
+            var mapper = new ObjectMapper();
+            assertEquals(mapper.writeValueAsString(newCompensation), mapper.writeValueAsString(compensation));
     	}
     }
 }
